@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Relazione Esame Computer Graphics</title>
+	<style type="text/css">
+		body,main,header{
+			display: flex;
+			align-items:  center;
+			justify-content: center;
+			width: 50vw;
+			flex-direction: column;
+			font-family: system-ui;
+		}
+		body{ width: 100%; margin: 0; padding: 0; box-sizing: border-box; font-size: 110%; line-height: 25px;}
+		header{ justify-content: center; align-items: center; font-family: system-ui; width: 100%; }
+		section{ width: 100%; }
+		img{ max-width: 100%; margin: 1em; }
+		code{ background: #ddd; color: #500; padding: 1px 5px; }
+
+		.center{ width: 100%; display: flex; align-items: center; justify-content: center; }
+		.skybox-imgs-container, .texture-imgs-container{ display: flex; align-items: center; justify-content: space-evenly; flex-direction: row; }
+		.skybox-image{ width: 90px; }
+		.texture-image{ width: 24%; }
+		.img-border{ border: 1px solid black; }
+		.mobile-img{width: 40%;}
+		#toc{ display: flex; align-items: flex-start; justify-content: center; flex-direction: column; }
+
+	</style>
+</head>
+<body>
+<header>
+	<h1>Progetto Computer Graphics</h1>
+	<h2>Gabriele Evangelista</h2>
+</header>
+<main>
+	<section>
+		<h3>Tabella dei contenuti</h3>
+		<div id="toc">
+			<a href="#intro">1 - Introduzione</a>
+			<a href="#asset">2 - Creazione Asset</a>
+			<a href="#script">3 - Script</a>
+			<a href="#input">4 - User Input</a>
+			<a href="#advanced">5 - Rendering avanzato <i>(opzionale)</i></a>
+			<a href="#future">6 - Sviluppi futuri</a>
+		</div>
+	</section>
+	<br><br>
+	<hr>
+	<section id="intro">
+		<h3>1 - Introduzione</h3>
+		L'applicazione è un gioco 3D per browser interamente sviluppato attraverso JavaScript e WebGl. 
+		<br>
+		<i>Schermata delle informazioni su computer:</i>
+		<img src="imgs/mainscreen.png" class="img-border">
+		<i>Schermata delle informazioni su dispositivo mobile:</i>
+		<div class="center">
+			<img class="mobile-img img-border" src="imgs/mainscreen-mobile.jpg"> 
+		</div>
+		<br>
+		È possibile scegliere tra due modalità:
+		<ul>
+			<li>Modalità camera libera: questa permette di visualizzare la scena spostando e ruotando la camera a piacimento.<br>
+				<img src="imgs/game1.png"></li>
+			<li>Modalità gioco: questa permette di giocare. Bisogna muovere la macchina e attraversare i semicerchi per ottenere punti evitando i cubi di ferro. Il punteggio verrà aggiornato finché il timer non arriva a zero. Per ricominciare la partita bisogna cambiare camera. È possibile scegliere tra due visualizzazioni: terza persona o dall'alto. È possibile inoltre scegliere quanti cubi di ferro devono essere sparsi per l'area di gioco attravero uno slider nei controlli in alto a destra.<br>
+				<img src="imgs/game2.png"> <img src="imgs/game3.png"></li>
+		</ul> 
+
+	</section>
+	<section id="asset">
+		<h3>2 - Creazione Asset</h3>
+		Per la creazione di tutti gli oggetti in scena è stato usato il programma Blender.
+		<h4>2.1 - Macchina</h4>
+		<img src="imgs/car-blender.png"> 
+		<h4>2.2 - Ruote</h4>
+		<img src="imgs/wheels-blender.png"> 
+		Le ruote sono state esportate separatamente dalla macchina in modo da poterle gestire diversamente. Queste infatti dovranno ruotare per andare avanti o indietro e la coppia delle ruote anteriori deve poter ruotare anche verso destra o sinistra.
+		<h4>2.3 - Terreno</h4>
+		<img src="imgs/ground-blender.png"> 
+		<h4>2.4 - Cerchi</h4>
+		<img src="imgs/circle-blender.png"> 
+		Il file circle.mat ha al suo interno 4 materiali, ciascuno di un colore diverso, in modo da poter generare randomicamente un cerchio di colore diverso.
+		<h4>2.5 - Io</h4>
+		<img src="imgs/me-blender.png"> 
+		<h4>2.6 - Cubo di Ferro</h4>
+		<img src="imgs/cube-blender.png"> 
+		<h4>2.7 - Muro</h4>
+		<img src="imgs/wall-blender.png">
+		Ho scelto di creare una "porzione" di muro unitaria in modo da poter rendere parametrica la dimensione dell'area di gioco. 
+		<h4>2.8 - Skybox</h4>
+		<div class="skybox-imgs-container">
+			<img class="skybox-image" src="imgs/neg-x.png">
+			<img class="skybox-image" src="imgs/pos-x.png">
+			<img class="skybox-image" src="imgs/neg-y.png">
+			<img class="skybox-image" src="imgs/pos-y.png">
+			<img class="skybox-image" src="imgs/neg-z.png">
+			<img class="skybox-image" src="imgs/pos-z.png">
+		</div>
+		<i>Le immagini sono state prese da internet.</i>
+		<h4>2.9 - Texture</h4>
+		<div class="texture-imgs-container">
+			<img class="texture-image img-border" src="imgs/me.png">
+			<img class="texture-image" src="imgs/ground.jpg">
+			<img class="texture-image" src="imgs/wall.jpg">
+			<img class="texture-image" src="imgs/iron.png">
+		</div>
+		<i>Le texture del terreno, del muro e del cubo di ferro sono state prese da internet.</i>
+	</section>
+
+	<section id="script">
+		<h3>3 - Script</h3>
+		<h4>3.1 - Car</h4>
+		<code>car.js</code> è lo script che si occupa di disegnare e gestire la fisica della macchina. Definisce le seguenti funzioni:
+		<ul>
+			<li><code>InitCar(gl)</code>: funzione che carica la mesh e i materiali della macchina e delle route attraverso <code>loadMesh.js</code> e imposta una posizione, una rotazione e una scala a ciascun oggetto caricato.</li>
+			<li><code>CarDoStep()</code>: funzione che si occupa di gestire la fisica della macchina, come la posizione, la velocità, la rotazione (della macchina stessa e delle ruote).</li>
+			<li><code>RenderCar(gl, program, opt)</code>: funzione che si occupa di disegnare ciascuna componente della macchina. Questa richiama la generica <code>RenderObject(gl, program, opt, data)</code> contenuta in <code>utils.js</code> passando le informazioni spaziali della componente.</li>
+		</ul>
+		<h4>3.2 - Cameras</h4>
+		<code>cameras.js</code> è lo script che si occupa di gestire la camera con la quale si osserva la scena. Sono disponibili tre tipi di camera diversi:
+		<ul>
+			<li><b>Camera libera</b>: permette di muoversi liberamente nello spazio usando i tasti W A S D, le frecce direzionali o il mouse per ruotare la visuale e la rotella del mouse per aggiustare la distanza dalla scena.</li> 
+			<li><b>Camera terza persona</b>: permette di giocare e dunque di muovere la macchina usando i tasti W A S D. La camera è posizionata dietro la macchina.</li>
+			<li><b>Camera dall'alto</b>: anche questa permette di giocare ma la camera è posta in alto.</li>
+		</ul>
+		Definisce inoltre le seguenti funzioni:
+		<ul>
+			<li><code>MoveCamera()</code>: funzione che permette di muovere e ruotare la camera libera.</li>
+			<li><code>SetCamera()</code>: funzione che permette di impostare quale delle tre camere deve essere usata e aggiorna la sua posizione e il suo target.</li>
+		</ul>
+		<h4>3.3 - Ground</h4>
+		<code>ground.js</code> è lo script che si occupa di inizializzare e disegnare il terreno. Definisce le seguenti funzioni:
+		<ul>
+			<li><code>InitGround(gl)</code>: funzione che carica la mesh, il materiale e la texture del terreno attraverso <code>loadMesh.js</code> e gli imposta una posizione, una rotazione e una scala</li>
+			<li><code>RenderGround(gl, program, opt)</code>: funzione che si occupa di disegnare il terreno. Questa richiama la generica <code>RenderObject(gl, program, opt, data)</code> contenuta in <code>utils.js</code> passando le informazioni spaziali e le trasformazioni di esso.</li>
+		</ul>
+		<h4>3.4 - Me</h4>
+		<code>me.js</code> è lo script che si occupa di inizializzare e disegnare l'oggetto sul quale è disegnata la mia foto. Definisce le seguenti funzioni:
+		<ul>
+			<li><code>InitMe(gl)</code>: funzione che carica la mesh, il materiale e la texture dell'oggetto attraverso <code>loadMesh.js</code> e gli imposta una posizione.</li>
+			<li><code>RenderMe(gl, program, opt)</code>: funzione che si occupa di disegnare l'oggetto. Questa richiama la generica <code>RenderObject(gl, program, opt, data)</code> contenuta in <code>utils.js</code> passando le informazioni spaziali di esso.</li>
+		</ul>
+		<h4>3.5 - Circle</h4>
+		<code>circle.js</code> è lo script che si occupa di inizializzare e disegnare i semicerchi in cui la macchina deve entrare. Definisce le seguenti funzioni:
+		<ul>
+			<li><code>InitCircle(gl)</code>: funzione che carica la mesh e i materiali attraverso <code>loadMesh.js</code> e richiama <code>RandomizeCircle()</code>.</li>
+			<li><code>RandomizeCircle()</code>: funzione che imposta una posizione al semicerchio all'interno del terreno e imposta un materiale a caso. La posizione viene generata usando la funzione <code>getRandomCoord()</code> contenuta in <code>utils.js</code>. Quando la macchina entra nel cerchio, questi dati vengono impostati nuovamente in modo randomico</code>.</li>
+			<li><code>RenderCircle(gl, program, opt)</code>: funzione che si occupa di disegnare l'oggetto e di gestire le collisioni con la macchina. Questa richiama la generica <code>RenderObject(gl, program, opt, data)</code> contenuta in <code>utils.js</code> passando le informazioni spaziali di esso.</li>
+		</ul>
+		<h4>3.6 - Wall</h4>
+		<code>wall.js</code> è lo script che si occupa di inizializzare e disegnare i muri che racchiudono l'area di gioco. Definisce le seguenti funzioni:
+		<ul>
+			<li><code>InitWall(gl)</code>: funzione che carica la mesh e i materiali attraverso <code>loadMesh.js</code> e inizializza i vettori che rappresentano le mura.</li>
+			<li><code>RenderWall(gl, program, opt)</code>: funzione che si occupa di disegnare le mura e di gestire le collisioni con la macchina. Questa richiama la generica <code>RenderObject(gl, program, opt, data)</code> contenuta in <code>utils.js</code> passando le informazioni spaziali di esso.</li>
+		</ul>
+		<h4>3.7 - Cubes</h4>
+		<code>iron-cube.js</code> è lo script che si occupa di inizializzare e disegnare i cubi di ferro che vengono sparsi nell'area di gioco. Definisce le seguenti funzioni:
+		<ul>
+			<li><code>InitCubes(gl)</code>: funzione che carica la mesh e i materiali attraverso <code>loadMesh.js</code> e inizializza il vettore delle posizioni di ogni cubo usando la funzione <code>RandomizeCubes()</code>.</li>
+			<li><code>RandomizeCubes()</code>: funzione che utilizza a sua volta <code>getRandomCoord()</code> contenuta in <code>utils.js</code> per impostare a ogni cubo una posizione libera.</li>
+			<li><code>RenderCubes(gl, program, opt)</code>: funzione che si occupa di disegnare i cubi di ferro e di gestire le collisioni con la macchina. Questa richiama la generica <code>RenderObject(gl, program, opt, data)</code> contenuta in <code>utils.js</code> passando le informazioni spaziali di esso.</li>
+		</ul>
+		<h4>3.8 - Utils</h4>
+		<code>utils.js</code> è uno script che contiene diverse variabili utili per giocare, definisce i selettori con i quali è possibile interagire con la scena e contiene diverse funzioni:
+		<ul>
+			<li><code>RenderObject(gl, program, opt, data)</code>: usata da tutti gli altri componenti per fare il render di un oggetto.</li>
+			<li><code>define_gui()</code>: usata per disegnare i selettori in alto a destra.</li>
+			<li><code>getRandomCoord()</code>: usata per ottenere una <i>x</i> e una <i>y</i> casuali libere (non occupate da altri oggetti) nell'area di gioco.</li>
+			<li><code>addScore()</code>: usata per aumentare il punteggio di gioco quando si entra in un semicerchio.</li>
+			<li><code>subtractScore()</code>: usata per diminuire il punteggio di gioco in seguito a una collisione.</li>
+			<li><code>refreshScore()</code>: usata per disegnare il nuovo punteggio sul canvas.</li>
+			<li><code>pad()</code>: usata per ottenere un numero con 2 cifre (aggiunge dunque uno 0 all'inizio se il numero ha solo una cifra).</li>
+			<li><code>drawTime()</code>: usata per disegnare tempo sul canvas.</li>
+			<li><code>updateTime()</code>: usata per aggiornare il tempo, viene richiamata ogni secondo.</li>
+			<li><code>startGame()</code>: usata per fare partire il gioco.</li>
+			<li><code>stopGame()</code>: usata per fare terminare il gioco.</li>
+
+		</ul>
+		<h4>3.9 - Main</h4>
+		<code>main.js</code> è lo script principale che permette il funzionamento dell'app. Contiene diverse funzioni:
+		<ul>
+			<li>Quando l'oggetto <code>document</code> è nello status <code>ready</code> per prima cosa cambia la schermata principale se si è su un dispositivo mobile e poi gestisce l'inizio del gioco in seguito al click sul bottone <code>Gioca</code>.</li>
+			<li><code>EventsHandler()</code> e <code>TouchEventsHandler()</code>: si occupano di gestire gli input dell'utente (siano essi provenienti da tastiera, mouse o touchscreen).
+			<li><code>CheckStartGame()</code></code>: si occupa di far partire il gioco se l'utente dà un input in modalità gioco.</li>
+			<li><code>createXYQuadVertices()</code>: si occupa di generare il cubo su cui viene mappato lo Skybox.
+		</ul> 
+		Questo script si occupa anche di definire la componente di luce che illumina la scena. Viene applicato il modello di illuminazione di Phong, il quale stabilisce che il colore di un fragment dipende da una componente <i>ambient</i>, una componente di <i>riflessione diffusa</i> e una componente di <i>riflessione speculare</i>. Queste componenti dipendono dalle proprietà della luce e del materiale. Le proprietà dipendenti da materiale e luce vengono estratte direttamente dalle informazioni associate a ogni mesh durante la chiamata alla funzione <code>LoadMesh(gl, obj)</code>. La componente ambiente viene stabilita come variabile globale e le componenti luce diffusa e speculare vengono calcolate all’interno del fragment shader.
+		<h4>3.10 - Funzioni di terze parti</h4>
+		<ul>
+			<li><code>load_mesh.js</code>: usa a sua volta <code>glm_utils.js</code> e <code>mesh_utils.js</code> per poter caricare le mesh, i materiali e le texture degli oggetti.</li>
+			<li><code>ui_components.js</code>: usa a sua volta <code>dat.gui.js</code> per poter generare i selettori in alto a destra.</li>
+			<li><code>m4.js</code>: libreria JavaScript che definisce funzioni matematiche su matrici 4&times;4.</li>
+			<li><code>jquery-3.6.0.js</code>: libreria JavaScript.</li>
+		</ul>
+	</section>
+
+	<section id="input">
+		<h3>4 - User Input</h3>
+		<h4>4.1 - Computer</h4>
+		Se si utilizza un dispositivo che dispone di tastiera e mouse è possibile utilizzare:
+		<ul>
+			<li>I tasti <code>W</code>, <code>A</code>, <code>S</code> e <code>D</code>: nella modalità camera libera spostano la camera, rispettivamente, in avanti, a sinistra, indietro e a destra; nella modalità gioco permettono di muovere la macchina nelle stesse direzioni.</li>
+			<li>I tasti <code>&uarr;</code>, <code>&larr;</code>, <code>&darr;</code> e <code>&rarr;</code>: funzionano solo nella modalità camera libera e permettono di ruotare la camera, rispettivamente, verso l'alto, sinistra, in basso e a destra.</li>
+			<li>Il tasto <code>Spazio</code>: funziona solo nella modalità di gioco e permette di azionare il freno a mano.</li>
+			<li><code>Click destro del mouse</code>: permette di ruotare la camera in base ai movimenti del mouse.</li>
+			<li><code>Rotella del mouse</code>: permette di diminuire o di aumentare la distanza della camera dalla scena.</li>
+		</ul>
+		<h4>4.2 - Mobile</h4>
+		Se si utilizza un dispositivo mobile, e dunque non si ha a disposizione un mouse e una tastiera, è possibile interagire attraverso il touch screen. <br>
+		Cliccando sullo schermo compare un gamepad e, attravero lo swipe, è possibile muovere nella direzione desiderata la camera o la macchina. <br>
+		Per poter ruotare la camera è necessario utilizzare i controlli disponibili in alto a destra e modificare <i>Theta</i> e <i>Phi</i>.<br>
+		È disponibile anche il bottone <code>Drift</code> il quale permette di azionare il freno a mano.	
+		<div class="center">
+			<img class="mobile-img" src="imgs/game5.jpg"> 
+		</div>
+	</section>
+	<section id="advanced">
+		<h3>5 - Rendering avanzato <i>(opzionale)</i></h3> 
+		All'oggetto sul quale sono disegnato può essere cambiata la trasparenza utilizzando, nei controlli in alto a destra, la barra <code>myTransparency</code>. Per poter ottenere questo risultato, l'oggetto in questione è l'ultimo ad essere disegnato e sono state usate funzioni specifiche di WebGl: <code>gl.enable(gl.BLEND)</code>, <code>gl.depthFunc(gl.LESS)</code> e <code>gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)</code>.
+		<img src="imgs/game4.png">
+	</section>
+	<section id="future">
+		<h3>6 - Sviluppi futuri</h3> 
+		Alcuni miglioramenti futuri possono essere:
+		<ul>
+			<li>Migliore gestione delle collisioni: attualmente le collisioni funzionano ma non molto bene vicino agli estremi dell'oggetto.</li>
+			<li>Rotazione di ostacoli e dei semicerchi: attualmente i cubi di ferro e i semicerchi non vengono ruotati in modo randomico. Una possibile miglioria è quella di prevedere questa possibilià e gestire di conseguenza le collisioni.</li>
+		</ul>
+	</section>
+</main>
+
+</body>
+</html>
